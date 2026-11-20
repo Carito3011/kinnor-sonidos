@@ -1,0 +1,55 @@
+# Arma Kinnor Orquesta 2 desde las librerías libres originales y la publica como Release "orquesta-2".
+name: Kinnor Orquesta 2
+
+on:
+  push:
+    branches: [main]
+    paths: ['tools/**', 'base/**', '.github/workflows/orquesta.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  armar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Bajar las librerías (versiones fijas)
+        run: |
+          set -e
+          fetch() {  # repo commit carpeta [rutas...]
+            mkdir -p "$3" && cd "$3"
+            git init -q && git remote add origin "$1"
+            if [ $# -gt 3 ]; then git sparse-checkout set --no-cone "${@:4}"; fi
+            git fetch -q --depth 1 origin "$2" && git checkout -q FETCH_HEAD
+            cd - > /dev/null
+          }
+          fetch https://github.com/sgossner/vsco-2-ce 440300901dfe9275fd84e0b7763af1f8443ae62e src/vsco '/Strings/' '/Brass/' '/Woodwinds/'
+          fetch https://github.com/peastman/sso 32bbdb169aef636b8216029a2e056424ba7c2abb src/sso
+          fetch https://github.com/open-soundfonts/Virtual_Playing_Orchestra_3 b0afa0f570e0e33c83da9bc4e626a4a239714dff src/vpo '/libs/'
+          df -h . | tail -1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Armar la librería
+        run: |
+          pip install -q numpy scipy soundfile
+          mkdir -p out
+          python tools/build_orquesta2.py src/vsco src/sso src/vpo/libs base/kinnor-orquesta-1.sf2 out/kinnor-orquesta-2.sf2
+          cd out
+          sha256sum kinnor-orquesta-2.sf2 | cut -d' ' -f1 > sha
+          printf '{"version":2,"size":%s,"sha256":"%s"}\n' "$(stat -c %s kinnor-orquesta-2.sf2)" "$(cat sha)" > orquesta-2.json
+          cat orquesta-2.json
+
+      - name: Publicar
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view orquesta-2 > /dev/null 2>&1 || gh release create orquesta-2 --title "Kinnor Orquesta 2" \
+            --notes "Librería completa de orquesta para Kinnor Studio 2.0 (la app la descarga sola). Créditos y licencias en el README."
+          gh release upload orquesta-2 out/kinnor-orquesta-2.sf2 out/orquesta-2.json --clobber
