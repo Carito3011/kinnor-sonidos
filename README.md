@@ -20,3 +20,8 @@ Cada sonido trae su versión "legato" (banco 211) y su articulación corta (banc
 
 Las muestras fueron procesadas (recortadas, niveladas, afinadas y con bucles). Esta librería es gratis y se distribuye gratis.
 La música que hagas con ella es tuya.
+
+## Sonidos básicos (`basicos`)
+
+`kinnor-gm.sf2` — Kinnor GM (GeneralUser GS + Kinnor Real) que Kinnor Studio para Windows baja la primera vez.
+Licencias: `base/GeneralUser-GS-LICENSE.txt` y `base/Kinnor-Real-LICENSE.txt`.

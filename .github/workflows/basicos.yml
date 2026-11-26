@@ -1,0 +1,24 @@
+# Publica los sonidos básicos (Kinnor GM) para Kinnor Studio en Windows, como Release "basicos".
+name: Sonidos básicos
+
+on:
+  push:
+    branches: [main]
+    paths: ['base/kinnor-gm.sf2', '.github/workflows/basicos.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Publicar
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view basicos > /dev/null 2>&1 || gh release create basicos --title "Kinnor — sonidos básicos" \
+            --notes "Kinnor GM (General MIDI + Kinnor Real) para Kinnor Studio en Windows. Licencias en base/."
+          gh release upload basicos base/kinnor-gm.sf2 --clobber
